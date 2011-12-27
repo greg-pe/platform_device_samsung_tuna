@@ -218,6 +218,11 @@ service iprenew_bnep0 /system/bin/dhcpcd -n
 service sysinit /system/xbin/busybox run-parts /system/etc/init.d
     oneshot
 
+service recovery /system/bin/shutdown -rr
+    disabled
+    oneshot
+    keycodes 115 116
+
 # bugreport is triggered by holding down volume down, volume up and power
 service bugreport /system/bin/bugmailer.sh -v
 	class main

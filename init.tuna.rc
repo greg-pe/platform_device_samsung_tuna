@@ -218,6 +218,7 @@ service iprenew_bnep0 /system/bin/dhcpcd -n
 service sysinit /system/xbin/busybox run-parts /system/etc/init.d
     oneshot
 
+# Reboot into recovery by holding volume up and power
 service recovery /system/bin/shutdown -rr
     disabled
     oneshot

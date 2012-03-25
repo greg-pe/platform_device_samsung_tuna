@@ -77,7 +77,7 @@ PRODUCT_COPY_FILES += \
 # Build properties
 PRODUCT_PROPERTY_OVERRIDES := \
 	wifi.interface=wlan0 \
-	wifi.supplicant_scan_interval=15 \
+	wifi.supplicant_scan_interval=90 \
 	drm.service.enabled=true \
 	ro.com.google.mcc_fallback=262
 

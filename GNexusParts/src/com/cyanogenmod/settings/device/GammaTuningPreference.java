@@ -42,21 +42,20 @@ public class GammaTuningPreference extends DialogPreference implements OnClickLi
     };
 
     private static final int[] SEEKBAR_ID = new int[] {
-            R.id.gamma_red_seekbar, R.id.gamma_green_seekbar, R.id.gamma_blue_seekbar, R.id.gamma_dss_seekbar
+            R.id.gamma_red_seekbar, R.id.gamma_green_seekbar, R.id.gamma_blue_seekbar
     };
 
     private static final int[] VALUE_DISPLAY_ID = new int[] {
-            R.id.gamma_red_value, R.id.gamma_green_value, R.id.gamma_blue_value, R.id.gamma_dss_value
+            R.id.gamma_red_value, R.id.gamma_green_value, R.id.gamma_blue_value
     };
 
     private static final String[] FILE_PATH = new String[] {
             "/sys/class/misc/samoled_color/red_v1_offset",
             "/sys/class/misc/samoled_color/green_v1_offset",
-            "/sys/class/misc/samoled_color/blue_v1_offset",
-            "/sys/devices/platform/omapdss/manager0/gamma"
+            "/sys/class/misc/samoled_color/blue_v1_offset"
     };
 
-    private GammaSeekBar mSeekBars[] = new GammaSeekBar[4];
+    private GammaSeekBar mSeekBars[] = new GammaSeekBar[3];
 
     private static final int MAX_VALUE = 200;
 
@@ -82,10 +81,7 @@ public class GammaTuningPreference extends DialogPreference implements OnClickLi
         for (int i = 0; i < SEEKBAR_ID.length; i++) {
             SeekBar seekBar = (SeekBar) view.findViewById(SEEKBAR_ID[i]);
             TextView valueDisplay = (TextView) view.findViewById(VALUE_DISPLAY_ID[i]);
-            if (i < 3)
-                mSeekBars[i] = new GammaSeekBar(seekBar, valueDisplay, FILE_PATH[i], OFFSET_VALUE, MAX_VALUE);
-            else
-                mSeekBars[i] = new GammaSeekBar(seekBar, valueDisplay, FILE_PATH[i], 0, 10);
+            mSeekBars[i] = new GammaSeekBar(seekBar, valueDisplay, FILE_PATH[i]);
         }
         SetupButtonClickListeners(view);
     }
@@ -171,18 +167,12 @@ public class GammaTuningPreference extends DialogPreference implements OnClickLi
 
         private TextView mValueDisplay;
 
-        private int iOffset;
-
-        private int iMax;
-
-        public GammaSeekBar(SeekBar seekBar, TextView valueDisplay, String filePath, Integer offsetValue, Integer maxValue) {
+        public GammaSeekBar(SeekBar seekBar, TextView valueDisplay, String filePath) {
             int iValue;
 
             mSeekBar = seekBar;
             mValueDisplay = valueDisplay;
             mFilePath = filePath;
-            iOffset = offsetValue;
-            iMax = maxValue;
 
             SharedPreferences sharedPreferences = getSharedPreferences();
 
@@ -191,12 +181,11 @@ public class GammaTuningPreference extends DialogPreference implements OnClickLi
                 String sDefaultValue = Utils.readOneLine(mFilePath);
                 iValue = Integer.valueOf(sDefaultValue);
             } else {
-                iValue = iMax - iOffset;
+                iValue = MAX_VALUE - OFFSET_VALUE;
             }
             mOriginal = iValue;
 
-            mSeekBar.setMax(iMax);
-                
+            mSeekBar.setMax(MAX_VALUE);
             reset();
             mSeekBar.setOnSeekBarChangeListener(this);
         }
@@ -204,7 +193,7 @@ public class GammaTuningPreference extends DialogPreference implements OnClickLi
         public void reset() {
             int iValue;
 
-            iValue = mOriginal + iOffset;
+            iValue = mOriginal + OFFSET_VALUE;
             mSeekBar.setProgress(iValue);
             updateValue(mOriginal);
         }
@@ -212,7 +201,7 @@ public class GammaTuningPreference extends DialogPreference implements OnClickLi
         public void save() {
             int iValue;
 
-            iValue = mSeekBar.getProgress() - iOffset;
+            iValue = mSeekBar.getProgress() - OFFSET_VALUE;
             Editor editor = getEditor();
             editor.putInt(mFilePath, iValue);
             editor.commit();
@@ -222,7 +211,7 @@ public class GammaTuningPreference extends DialogPreference implements OnClickLi
         public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
             int iValue;
 
-            iValue = progress - iOffset;
+            iValue = progress - OFFSET_VALUE;
             Utils.writeValue(mFilePath, String.valueOf((long) iValue));
             updateValue(iValue);
         }
@@ -263,24 +252,21 @@ public class GammaTuningPreference extends DialogPreference implements OnClickLi
     }
 
     private void SetCMSettings() {
-        mSeekBars[0].SetNewValue(2);
+        mSeekBars[0].SetNewValue(-15);
         mSeekBars[1].SetNewValue(15);
-        mSeekBars[2].SetNewValue(5);
-        mSeekBars[3].SetNewValue(8);
+        mSeekBars[2].SetNewValue(-10);
     }
 
     private void SetSBrightSettings() {
         mSeekBars[0].SetNewValue(6);
         mSeekBars[1].SetNewValue(25);
         mSeekBars[2].SetNewValue(7);
-        mSeekBars[3].SetNewValue(4);
     }
 
     private void SetDefaultSettings() {
         mSeekBars[0].SetNewValue(0);
         mSeekBars[1].SetNewValue(0);
         mSeekBars[2].SetNewValue(0);
-        mSeekBars[3].SetNewValue(0);
     }
 
 }

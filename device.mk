@@ -174,13 +174,8 @@ PRODUCT_COPY_FILES += \
 	frameworks/native/data/etc/com.android.nfc_extras.xml:system/etc/permissions/com.android.nfc_extras.xml
 
 # NFCEE access control
-ifeq ($(TARGET_BUILD_VARIANT),user)
-    NFCEE_ACCESS_PATH := device/samsung/tuna/nfcee_access.xml
-else
-    NFCEE_ACCESS_PATH := device/samsung/tuna/nfcee_access_debug.xml
-endif
 PRODUCT_COPY_FILES += \
-    $(NFCEE_ACCESS_PATH):system/etc/nfcee_access.xml
+    device/samsung/tuna/nfcee_access.xml:system/etc/nfcee_access.xml
 
 PRODUCT_PROPERTY_OVERRIDES += \
 	ro.opengles.version=131072

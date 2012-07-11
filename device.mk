@@ -105,6 +105,10 @@ PRODUCT_PACKAGES += \
         Nfc \
         Tag
 
+# SIM Toolkit
+PRODUCT_PACKAGES += \
+        Stk
+
 # Live Wallpapers
 PRODUCT_PACKAGES += \
         LiveWallpapers \

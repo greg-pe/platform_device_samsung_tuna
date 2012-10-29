@@ -98,8 +98,9 @@ PRODUCT_PROPERTY_OVERRIDES += \
 PRODUCT_DEFAULT_PROPERTY_OVERRIDES += \
 	persist.sys.usb.config=mtp
 
-# Torch
+# Tuna Packages
 PRODUCT_PACKAGES += \
+        GNexusParts \
         Torch
 
 # NFC

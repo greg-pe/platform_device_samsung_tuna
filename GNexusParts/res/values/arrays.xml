@@ -1,8 +1,8 @@
 <resources xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">
     <string-array name="gpu_overclock_entries">
-        <item>307,2 MHz (default)</item>
-        <item>384,0 MHz</item>
-        <item>512,0 MHz</item>
+        <item>307.2 MHz (default)</item>
+        <item>384.0 MHz</item>
+        <item>512.0 MHz</item>
     </string-array>
 
     <string-array name="gpu_overclock_values" translatable="false">
@@ -10,4 +10,25 @@
         <item>1</item>
         <item>2</item>
     </string-array>
+
+    <string-array name="fsync_control_entries">
+        <item>enabled (default)</item>
+        <item>Disabled</item>
+    </string-array>
+
+    <string-array name="fsync_control_values" translatable="false">
+        <item>1</item>
+        <item>0</item>
+    </string-array>
+
+    <string-array name="highperf_audio_entries">
+        <item>enabled</item>
+        <item>Disabled (default)</item>
+    </string-array>
+
+    <string-array name="highperf_audio_values" translatable="false">
+        <item>1</item>
+        <item>0</item>
+    </string-array>
+
 </resources>

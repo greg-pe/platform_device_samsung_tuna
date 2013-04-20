@@ -30,7 +30,8 @@
     </PreferenceCategory>
 
     <!-- GPU -->
-    <PreferenceCategory android:key="category_gpu"
+    <PreferenceCategory 
+	android:key="category_gpu"
         android:title="@string/category_gpu_title">
         <ListPreference
             android:key="gpu_overclock"
@@ -39,4 +40,30 @@
             android:entryValues="@array/gpu_overclock_values"
             android:defaultValue="0" />
     </PreferenceCategory>
+
+    <PreferenceCategory
+	android:title="@string/advanced_kernel_title"
+	android:key='advanced_kernel_options'>
+
+	<ListPreference
+            android:key="fsync_control"
+            android:title="@string/fsync_control_title"
+            android:entries="@array/fsync_control_entries"
+            android:entryValues="@array/fsync_control_values"
+            android:defaultValue="1" />
+
+	<ListPreference
+            android:key="highperformance_audio"
+            android:title="@string/highperf_audio_title"
+            android:entries="@array/highperf_audio_entries"
+            android:entryValues="@array/highperf_audio_values"
+            android:defaultValue="0" />
+
+        <com.cyanogenmod.settings.device.SoundControl
+            android:key="sound_control"
+            android:title="@string/sound_control_title"
+            android:summary="@string/sound_control_summary" />
+
+    </PreferenceCategory>
+
 </PreferenceScreen>

@@ -26,49 +26,42 @@ import android.view.View;
 import android.view.View.OnClickListener;
 import android.widget.SeekBar;
 import android.widget.TextView;
-import android.util.Log;
 import android.widget.Button;
+import android.util.Log;
+import android.os.Vibrator;
 
 /**
- * Special preference type that allows configuration of Color settings on Nexus
+ * Special preference type that allows configuration of sound control settings on Nexus
  * Devices
  */
-public class ColorTuningPreference extends DialogPreference implements OnClickListener {
+public class SoundControl extends DialogPreference  implements OnClickListener {
 
-    private static final String TAG = "COLOR...";
-
-    enum Colors {
-        RED, GREEN, BLUE
-    };
+    private static final String TAG = "SOUND...";
 
     private static final int[] SEEKBAR_ID = new int[] {
-            R.id.color_red_seekbar, R.id.color_green_seekbar, R.id.color_blue_seekbar
+            R.id.sound_seekbar
     };
 
     private static final int[] VALUE_DISPLAY_ID = new int[] {
-            R.id.color_red_value, R.id.color_green_value, R.id.color_blue_value
+            R.id.sound_value
     };
 
     private static final String[] FILE_PATH = new String[] {
-            "/sys/class/misc/samoled_color/red_multiplier",
-            "/sys/class/misc/samoled_color/green_multiplier",
-            "/sys/class/misc/samoled_color/blue_multiplier"
+            "/sys/devices/virtual/misc/soundcontrol/volume_boost",
     };
 
-    private ColorSeekBar mSeekBars[] = new ColorSeekBar[3];
+    private soundSeekBar mSeekBars[] = new soundSeekBar[1];
 
-    // Align MAX_VALUE with Voodoo Control settings
-    private static final int MAX_VALUE = 1100000000;
+    private static final int MAX_VALUE = 3;
 
-    // Track instances to know when to restore original color
-    // (when the orientation changes, a new dialog is created before the old one
-    // is destroyed)
+    private static final int OFFSET_VALUE = 0;
+
     private static int sInstances = 0;
 
-    public ColorTuningPreference(Context context, AttributeSet attrs) {
+    public SoundControl(Context context, AttributeSet attrs) {
         super(context, attrs);
-        
-        setDialogLayoutResource(R.layout.preference_dialog_color_tuning);
+
+        setDialogLayoutResource(R.layout.preference_dialog_sound_control);
     }
 
     @Override
@@ -80,18 +73,20 @@ public class ColorTuningPreference extends DialogPreference implements OnClickLi
         for (int i = 0; i < SEEKBAR_ID.length; i++) {
             SeekBar seekBar = (SeekBar) view.findViewById(SEEKBAR_ID[i]);
             TextView valueDisplay = (TextView) view.findViewById(VALUE_DISPLAY_ID[i]);
-            mSeekBars[i] = new ColorSeekBar(seekBar, valueDisplay, FILE_PATH[i]);
+            if (i < 3)
+                mSeekBars[i] = new soundSeekBar(seekBar, valueDisplay, FILE_PATH[i], OFFSET_VALUE, MAX_VALUE);
+            else
+                mSeekBars[i] = new soundSeekBar(seekBar, valueDisplay, FILE_PATH[i], 0, 3);
         }
         SetupButtonClickListeners(view);
     }
 
     private void SetupButtonClickListeners(View view) {
-            Button mButton1 = (Button)view.findViewById(R.id.btnColor1);
-            Button mButton2 = (Button)view.findViewById(R.id.btnColor2);
-            Button mButton3 = (Button)view.findViewById(R.id.btnColor3);
-            mButton1.setOnClickListener(this);
-            mButton2.setOnClickListener(this);
-            mButton3.setOnClickListener(this);
+            Button mDefaultButton = (Button)view.findViewById(R.id.btnmin);
+            mDefaultButton.setOnClickListener(this);
+
+            Button mTestButton = (Button)view.findViewById(R.id.btnmax);
+            mTestButton.setOnClickListener(this);
     }
 
     @Override
@@ -101,54 +96,51 @@ public class ColorTuningPreference extends DialogPreference implements OnClickLi
         sInstances--;
 
         if (positiveResult) {
-            for (ColorSeekBar csb : mSeekBars) {
+            for (soundSeekBar csb : mSeekBars) {
                 csb.save();
             }
         } else if (sInstances == 0) {
-            for (ColorSeekBar csb : mSeekBars) {
+            for (soundSeekBar csb : mSeekBars) {
                 csb.reset();
             }
         }
     }
 
     /**
-     * Restore color tuning from SharedPreferences. (Write to kernel.)
-     * 
+     * Restore default sound state from SharedPreferences. (Write to kernel.)
+     *
      * @param context The context to read the SharedPreferences from
      */
     public static void restore(Context context) {
         if (!isSupported()) {
             return;
         }
-        
-        int iValue;
+
         SharedPreferences sharedPrefs = PreferenceManager.getDefaultSharedPreferences(context);
 
-        Boolean bFirstTime = sharedPrefs.getBoolean("FirstTimeColor", true);
+        Boolean bFirstTime = sharedPrefs.getBoolean("FirstVolumeBoost", true);
         for (String filePath : FILE_PATH) {
             String sDefaultValue = Utils.readOneLine(filePath);
-            iValue = sharedPrefs.getInt(filePath, Integer.valueOf(sDefaultValue));
+            int iValue = sharedPrefs.getInt(filePath, Integer.valueOf(sDefaultValue));
             if (bFirstTime){
-                Utils.writeColor(filePath, MAX_VALUE);
-                Log.d(TAG, "restore default value: " +MAX_VALUE+ " File: " + filePath);
+                Utils.writeValue(filePath, "0");
+                Log.d(TAG, "restore default value: 0 File: " + filePath);
             }
             else{
-                Utils.writeColor(filePath, iValue);
+                Utils.writeValue(filePath, String.valueOf((long) iValue));
                 Log.d(TAG, "restore: iValue: " + iValue + " File: " + filePath);
             }
         }
-        if (bFirstTime)
-        {
+        if (bFirstTime) {
             SharedPreferences.Editor editor = sharedPrefs.edit();
-            editor.putBoolean("FirstTimeColor", false);
+            editor.putBoolean("FirstVolumeBoost", false);
             editor.commit();
         }
     }
 
     /**
-     * Check whether the running kernel supports color tuning or not.
-     * 
-     * @return Whether color tuning is supported or not
+     * Check whether the running kernel high performance sound tuning or not.
+     *
      */
     public static boolean isSupported() {
         boolean supported = true;
@@ -161,7 +153,7 @@ public class ColorTuningPreference extends DialogPreference implements OnClickLi
         return supported;
     }
 
-    class ColorSeekBar implements SeekBar.OnSeekBarChangeListener {
+    class soundSeekBar implements SeekBar.OnSeekBarChangeListener {
 
         private String mFilePath;
 
@@ -171,44 +163,58 @@ public class ColorTuningPreference extends DialogPreference implements OnClickLi
 
         private TextView mValueDisplay;
 
-        public ColorSeekBar(SeekBar seekBar, TextView valueDisplay, String filePath) {
+        private int iOffset;
+
+        private int iMax;
+
+        public soundSeekBar(SeekBar seekBar, TextView valueDisplay, String filePath, Integer offsetValue, Integer maxValue) {
             int iValue;
 
             mSeekBar = seekBar;
             mValueDisplay = valueDisplay;
             mFilePath = filePath;
-
-            SharedPreferences sharedPreferences = getSharedPreferences();
+            iOffset = offsetValue;
+            iMax = maxValue;
 
             // Read original value
             if (Utils.fileExists(mFilePath)) {
                 String sDefaultValue = Utils.readOneLine(mFilePath);
-                iValue = (int) (Long.valueOf(sDefaultValue) / 2);
+                iValue = nextBoostValue(Integer.valueOf(sDefaultValue));
             } else {
-                iValue = sharedPreferences.getInt(mFilePath, MAX_VALUE);
+                iValue = iMax - iOffset;
             }
             mOriginal = iValue;
 
-            mSeekBar.setMax(MAX_VALUE);
+            mSeekBar.setMax(iMax);
+
             reset();
             mSeekBar.setOnSeekBarChangeListener(this);
         }
 
         public void reset() {
-            mSeekBar.setProgress(mOriginal);
+            int iValue;
+
+            iValue = mOriginal + iOffset;
+            mSeekBar.setProgress(iValue);
             updateValue(mOriginal);
         }
 
         public void save() {
+            int iValue;
+
+            iValue = mSeekBar.getProgress() - iOffset;
             Editor editor = getEditor();
-            editor.putInt(mFilePath, mSeekBar.getProgress());
+            editor.putInt(mFilePath, nextBoostValue(iValue));
             editor.commit();
         }
 
         @Override
         public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
-            Utils.writeColor(mFilePath, progress);
-            updateValue(progress);
+            int iValue;
+
+            iValue = progress - iOffset;
+            Utils.writeValue(mFilePath, String.valueOf((long) nextBoostValue(iValue)));
+            updateValue(iValue);
         }
 
         @Override
@@ -222,45 +228,46 @@ public class ColorTuningPreference extends DialogPreference implements OnClickLi
         }
 
         private void updateValue(int progress) {
-            mValueDisplay.setText(String.format("%d", (int) progress / 5000000));
+            mValueDisplay.setText(String.format("%d", (int) progress));
         }
 
-        public void SetNewValue(int iValue) {
+        public void setNewValue(int iValue) {
             mOriginal = iValue;
             reset();
+        }
+
+        private int minValue(int averageValue) {
+            int resultMinValue;
+
+            resultMinValue = 0;
+            return resultMinValue;
+        }
+
+        private int nextBoostValue(int resultMinValue) {
+            int boostValue;
+
+            boostValue = (resultMinValue);
+            return boostValue;
         }
 
     }
 
     public void onClick(View v) {
         switch(v.getId()){
-            case R.id.btnColor1:
-                    SetSettings1();
+            case R.id.btnmin:
+                    setMinValue();
                     break;
-            case R.id.btnColor2:
-                    SetSettings2();
-                    break;
-            case R.id.btnColor3:
-                    SetSettings3();
+            case R.id.btnmax:
+                    setMaxValue();
                     break;
         }
     }
 
-    private void SetSettings1() {
-        mSeekBars[0].SetNewValue(1000000000);
-        mSeekBars[1].SetNewValue(1000000000);
-        mSeekBars[2].SetNewValue(1000000000);
+    private void setMinValue() {
+        mSeekBars[0].setNewValue(0);
     }
 
-    private void SetSettings2() {
-        mSeekBars[0].SetNewValue(800000000);
-        mSeekBars[1].SetNewValue(800000000);
-        mSeekBars[2].SetNewValue(1000000000);
-    }
-
-    private void SetSettings3() {
-        mSeekBars[0].SetNewValue(900000000);
-        mSeekBars[1].SetNewValue(960000000);
-        mSeekBars[2].SetNewValue(1000000000);
+    private void setMaxValue() {
+        mSeekBars[0].setNewValue(3);
     }
 }

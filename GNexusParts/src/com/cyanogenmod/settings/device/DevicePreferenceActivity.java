@@ -32,12 +32,18 @@ public class DevicePreferenceActivity extends PreferenceFragment {
     public static final String KEY_CATEGORY_RADIO = "category_radio";
     public static final String KEY_HSPA = "hspa";
     public static final String KEY_GPU_OVERCLOCK = "gpu_overclock";
+    public static final String KEY_FSYNC_CONTROL = "fsync_control";
+    public static final String KEY_SOUND_CONTROL = "sound_control";
+    public static final String KEY_HIGHPERFORMANCE_AUDIO = "highperformance_audio";
 
     private ColorTuningPreference mColorTuning;
     private GammaTuningPreference mGammaTuning;
     private ColorHackPresets mColorHackPresets;
     private VibratorTuningPreference mVibratorTuning;
     private ListPreference mGpuOverclock;
+    private SoundControl mSoundControl;
+    private ListPreference mFsyncControl;
+    private ListPreference mHighPerformanceAudio;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -61,5 +67,18 @@ public class DevicePreferenceActivity extends PreferenceFragment {
         mGpuOverclock.setEnabled(GpuOverclock.isSupported());
         mGpuOverclock.setOnPreferenceChangeListener(new GpuOverclock());
         GpuOverclock.updateSummary(mGpuOverclock, Integer.parseInt(mGpuOverclock.getValue()));
+
+        mSoundControl = (SoundControl) findPreference(KEY_SOUND_CONTROL);
+        mSoundControl.setEnabled(SoundControl.isSupported());
+
+        mFsyncControl = (ListPreference) findPreference(KEY_FSYNC_CONTROL);
+        mFsyncControl.setEnabled(FsyncControl.isSupported());
+        mFsyncControl.setOnPreferenceChangeListener(new FsyncControl());
+        FsyncControl.updateSummary(mFsyncControl, Integer.parseInt(mFsyncControl.getValue()));
+
+        mHighPerformanceAudio = (ListPreference) findPreference(KEY_HIGHPERFORMANCE_AUDIO);
+        mHighPerformanceAudio.setEnabled(HighPerformanceAudio.isSupported());
+        mHighPerformanceAudio.setOnPreferenceChangeListener(new HighPerformanceAudio());
+        HighPerformanceAudio.updateSummary(mHighPerformanceAudio, Integer.parseInt(mHighPerformanceAudio.getValue()));
     }
 }
